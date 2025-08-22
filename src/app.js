@@ -52,7 +52,24 @@ app.use(
 import { userRouter } from "./routes/user.routes.js"
 app.use('/api/users',userRouter);
 
+import { ApiError } from "./Utils/Api_Error.utils.js"
+app.use((err, req, res, next) => {
+    if (err instanceof ApiError) {
+        return res.status(err.statusCode).json({
+            success: err.success,
+            message: err.message,
+            errors: err.errors,
+            stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+        });
+    }
 
-
+    // Default handler for unhandled errors
+    res.status(500).json({
+        status:500,
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
+    throw err;
+});
 
 export {app}
