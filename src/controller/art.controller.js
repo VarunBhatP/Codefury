@@ -108,6 +108,9 @@ const getAllArt = asyncHandler(async (req, res) => {
 const getArtById = asyncHandler(async (req, res) => {
     const { artId } = req.params;
 
+    console.log(`Art id: ${artId}`);
+    
+
     if (!mongoose.Types.ObjectId.isValid(artId)) {
         throw new ApiError(400, "Invalid art ID");
     }
@@ -374,7 +377,8 @@ const getArtByArtist = asyncHandler(async (req, res) => {
 const getLikedArt = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
-
+    console.log("get liked called...");
+    
     const arts = await Art.find({ likes: req.user._id })
         .populate("artist", "userName avatar")
         .populate("likes", "userName avatar")

@@ -32,10 +32,10 @@ router.post(
 );
 
 // Get all art pieces (public route - no authentication required)
-router.get("/", getAllArt);
+router.get("/getAllArt", getAllArt);
 
 // Get art piece by ID (public route)
-router.get("/:artId", getArtById);
+router.get("/getArtById/:artId", getArtById);
 
 // Update art piece (requires authentication and optional file upload)
 router.patch(
@@ -47,25 +47,25 @@ router.patch(
 );
 
 // Delete art piece (requires authentication)
-router.delete("/:artId", deleteArt);
+router.delete("/deleteArt/:artId", deleteArt);
 
 // Like/Unlike art piece (requires authentication)
-router.patch("/:artId/like", toggleLike);
+router.patch("/likeArt/:artId", toggleLike);
 
 // Add comment to art piece (requires authentication)
-router.post("/:artId/comments", addComment);
+router.post("/addComment/:artId", addComment);
 
 // Remove comment from art piece (requires authentication)
-router.delete("/:artId/comments/:commentId", removeComment);
+router.delete("/deleteCommentFromArt/:artId/comments/:commentId", removeComment);
 
 // Get art pieces by specific artist (public route)
-router.get("/artist/:artistId", getArtByArtist);
+router.get("/user/:artistId", getArtByArtist);
 
 // Get user's liked art pieces (requires authentication)
-router.get("/user/liked", getLikedArt);
+router.get("/myLikes", getLikedArt);
 
 // Get trending art pieces (public route)
-router.get("/trending/art", getTrendingArt);
+router.get("/showTrending", getTrendingArt);
 
 // Search art pieces by tags (public route)
 router.get("/search/tags", searchArtByTags);
