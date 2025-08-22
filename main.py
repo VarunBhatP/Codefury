@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify
 from PIL import Image
 import requests
 import io
-import cv2
 import numpy as np
 from sklearn.cluster import KMeans
 
