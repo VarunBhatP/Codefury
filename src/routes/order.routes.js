@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { createStripePaymentIntent, handleStripeWebhook } from "../controller/order.controller.js";
+import { createStripePaymentIntent, handleStripeWebhook } from "../controllers/order.controller.js";
 
 const router = Router();
 

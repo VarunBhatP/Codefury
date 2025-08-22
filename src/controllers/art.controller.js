@@ -519,6 +519,229 @@ const getArtStats = asyncHandler(async (req, res) => {
     );
 });
 
+// Get artist leaderboard based on total likes
+const getArtistLeaderboard = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, timeFrame = "all" } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build date filter based on timeFrame
+    let dateFilter = {};
+    const now = new Date();
+    
+    switch (timeFrame) {
+        case "week":
+            dateFilter = {
+                createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+            };
+            break;
+        case "month":
+            dateFilter = {
+                createdAt: { $gte: new Date(now.getFullYear(), now.getMonth(), 1) }
+            };
+            break;
+        case "year":
+            dateFilter = {
+                createdAt: { $gte: new Date(now.getFullYear(), 0, 1) }
+            };
+            break;
+        case "all":
+        default:
+            dateFilter = {};
+            break;
+    }
+
+    // Aggregate to get artist leaderboard
+    const leaderboard = await Art.aggregate([
+        // Match by time frame if specified
+        ...(Object.keys(dateFilter).length > 0 ? [{ $match: dateFilter }] : []),
+        
+        // Group by artist and calculate total likes
+        {
+            $group: {
+                _id: "$artist",
+                totalLikes: { $sum: { $size: "$likes" } },
+                totalArt: { $sum: 1 },
+                totalComments: { $sum: { $size: "$comments" } },
+                avgLikesPerArt: { $avg: { $size: "$likes" } },
+                artPieces: {
+                    $push: {
+                        _id: "$_id",
+                        title: "$title",
+                        artForm: "$artForm",
+                        likes: { $size: "$likes" },
+                        comments: { $size: "$comments" },
+                        createdAt: "$createdAt"
+                    }
+                }
+            }
+        },
+        
+        // Sort by total likes (descending)
+        {
+            $sort: { totalLikes: -1, avgLikesPerArt: -1 }
+        },
+        
+        // Skip for pagination
+        { $skip: skip },
+        
+        // Limit results
+        { $limit: parseInt(limit) },
+        
+        // Lookup artist details
+        {
+            $lookup: {
+                from: "users",
+                localField: "_id",
+                foreignField: "_id",
+                as: "artist"
+            }
+        },
+        
+        // Unwind artist array
+        {
+            $unwind: "$artist"
+        },
+        
+        // Project only needed fields
+        {
+            $project: {
+                "artist.password": 0,
+                "artist.refreshToken": 0,
+                "artist.email": 0
+            }
+        }
+    ]);
+
+    // Get total count for pagination
+    const totalCount = await Art.aggregate([
+        ...(Object.keys(dateFilter).length > 0 ? [{ $match: dateFilter }] : []),
+        {
+            $group: {
+                _id: "$artist"
+            }
+        },
+        {
+            $count: "total"
+        }
+    ]);
+
+    const total = totalCount.length > 0 ? totalCount[0].total : 0;
+
+    // Add ranking to each artist
+    const leaderboardWithRanking = leaderboard.map((artist, index) => ({
+        ...artist,
+        rank: skip + index + 1
+    }));
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            leaderboard: leaderboardWithRanking,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(total / parseInt(limit)),
+                totalItems: total,
+                itemsPerPage: parseInt(limit)
+            },
+            timeFrame: timeFrame
+        }, "Artist leaderboard retrieved successfully!")
+    );
+});
+
+// Get top performing art pieces by likes
+const getTopArtPieces = asyncHandler(async (req, res) => {
+    const { limit = 10, timeFrame = "all", artForm } = req.query;
+
+    // Build date filter based on timeFrame
+    let dateFilter = {};
+    const now = new Date();
+    
+    switch (timeFrame) {
+        case "week":
+            dateFilter = {
+                createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+            };
+            break;
+        case "month":
+            dateFilter = {
+                createdAt: { $gte: new Date(now.getFullYear(), now.getMonth(), 1) }
+            };
+            break;
+        case "year":
+            dateFilter = {
+                createdAt: { $gte: new Date(now.getFullYear(), 0, 1) }
+            };
+            break;
+        case "all":
+        default:
+            dateFilter = {};
+            break;
+    }
+
+    // Add art form filter if specified
+    if (artForm) {
+        dateFilter.artForm = artForm;
+    }
+
+    const topArtPieces = await Art.aggregate([
+        // Match by filters
+        { $match: dateFilter },
+        
+        // Add like count field
+        {
+            $addFields: {
+                likeCount: { $size: "$likes" },
+                commentCount: { $size: "$comments" }
+            }
+        },
+        
+        // Sort by likes (descending)
+        {
+            $sort: { likeCount: -1, commentCount: -1, createdAt: -1 }
+        },
+        
+        // Limit results
+        { $limit: parseInt(limit) },
+        
+        // Lookup artist details
+        {
+            $lookup: {
+                from: "users",
+                localField: "artist",
+                foreignField: "_id",
+                as: "artist"
+            }
+        },
+        
+        // Unwind artist array
+        {
+            $unwind: "$artist"
+        },
+        
+        // Project only needed fields
+        {
+            $project: {
+                "artist.password": 0,
+                "artist.refreshToken": 0,
+                "artist.email": 0
+            }
+        }
+    ]);
+
+    // Add ranking
+    const topArtWithRanking = topArtPieces.map((art, index) => ({
+        ...art,
+        rank: index + 1
+    }));
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            topArtPieces: topArtWithRanking,
+            timeFrame: timeFrame,
+            artForm: artForm || "all"
+        }, "Top art pieces retrieved successfully!")
+    );
+});
+
 export {
     createArt,
     getAllArt,
@@ -532,5 +755,7 @@ export {
     getLikedArt,
     getTrendingArt,
     searchArtByTags,
-    getArtStats
+    getArtStats,
+    getArtistLeaderboard,
+    getTopArtPieces
 };

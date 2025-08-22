@@ -12,8 +12,10 @@ import {
     getLikedArt,
     getTrendingArt,
     searchArtByTags,
-    getArtStats
-} from "../controller/art.controller.js";
+    getArtStats,
+    getArtistLeaderboard,
+    getTopArtPieces
+} from "../controllers/art.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middle_ware.js";
 
@@ -72,5 +74,11 @@ router.get("/search/tags", searchArtByTags);
 
 // Get art statistics (public route)
 router.get("/stats/overview", getArtStats);
+
+// Get artist leaderboard (public route)
+router.get("/leaderboard/artists", getArtistLeaderboard);
+
+// Get top performing art pieces (public route)
+router.get("/leaderboard/artpieces", getTopArtPieces);
 
 export default router;
