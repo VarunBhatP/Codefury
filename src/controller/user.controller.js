@@ -96,26 +96,7 @@ const registerUser = asyncHandler(
                 )
             )
 
-        /*
-          If evrything works fine the response should look like this:
-          {
-      "statusCode": 200,
-      "data": {
-          "_id": "681b45b8c04494d446fe1294",
-          "userName": "suhail",
-          "email": "suhailsharieffsharieff@gmail.com",
-          "fullName": "Suhail Sharieff",
-          "avatar": "http://res.cloudinary.com/diioxxov8/image/upload/v1746617783/wkmwdakaeeajmpbrg3ga.png",
-          "coverImage": "http://res.cloudinary.com/diioxxov8/image/upload/v1746617784/dn1goblnqyw3by2zhrpi.jpg",
-          "watchHistory": [],
-          "createdAt": "2025-05-07T11:36:24.935Z",
-          "updatedAt": "2025-05-07T11:36:24.935Z",
-          "__v": 0
-      },
-      "message": "User created succeesfully: User: {\"_id\":\"681b45b8c04494d446fe1294\",\"userName\":\"suhail\",\"email\":\"suhailsharieffsharieff@gmail.com\",\"fullName\":\"Suhail Sharieff\",\"avatar\":\"http://res.cloudinary.com/diioxxov8/image/upload/v1746617783/wkmwdakaeeajmpbrg3ga.png\",\"coverImage\":\"http://res.cloudinary.com/diioxxov8/image/upload/v1746617784/dn1goblnqyw3by2zhrpi.jpg\",\"watchHistory\":[],\"createdAt\":\"2025-05-07T11:36:24.935Z\",\"updatedAt\":\"2025-05-07T11:36:24.935Z\",\"__v\":0}",
-      "success": true
-  }
-        */
+       
     }
 
 
