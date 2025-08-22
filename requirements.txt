@@ -1,0 +1,7 @@
+flask
+requests
+Pillow
+numpy
+scikit-learn
+opencv-python
+cv2
