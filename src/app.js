@@ -59,8 +59,7 @@ import orderRouter from "./routes/order.routes.js";
 app.use("/api/orders", orderRouter);
 
 import shareRouter from "./routes/share.routes.js";
-
-app.use("/api/v1", shareRouter); 
+app.use("/api/shareLink", shareRouter); 
 
 import { ApiError } from "./Utils/Api_Error.utils.js"
 app.use((err, req, res, next) => {
