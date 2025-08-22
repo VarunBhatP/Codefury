@@ -52,6 +52,9 @@ app.use(
 import { userRouter } from "./routes/user.routes.js"
 app.use('/api/users',userRouter);
 
+import artRouter from "./routes/art.routes.js"
+app.use('/api/art',artRouter);
+
 import { ApiError } from "./Utils/Api_Error.utils.js"
 app.use((err, req, res, next) => {
     if (err instanceof ApiError) {
