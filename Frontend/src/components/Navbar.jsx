@@ -34,6 +34,7 @@ const Navbar = () => {
                     <Link to="/gallery" className="text-gray-700 hover:text-orange-800 font-medium">Gallery</Link>
                     <Link to="/leaderboard" className="text-gray-700 hover:text-orange-800 font-medium">Leaderboard</Link>
                     <Link to="/about" className="text-gray-700 hover:text-orange-800 font-medium">About</Link>
+                    <Link to="/artAnalyzer" className="text-gray-700 hover:text-orange-800 font-medium">AI Art Analyzer</Link>
                     {isAuthenticated && (
                         <Link to="/upload-art" className="text-gray-700 hover:text-orange-800 font-medium">Upload Art</Link>
                     )}

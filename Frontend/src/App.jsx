@@ -18,6 +18,7 @@ import ArtistDashboard from './components/ArtistDashboard';
 import Leaderboard from './components/Leaderboard';
 import AboutPage from './pages/AboutPage';
 import ArtUploadPage from './pages/ArtUploadPage';
+import ArtAnalyzer from './components/ArtAnalyzer';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/upload-art" element={<ArtUploadPage />} />
+                <Route path="/artAnalyzer" element={<ArtAnalyzer />} />
               </Routes>
             </main>
             <Footer />
