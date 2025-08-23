@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
-@app.route("/analyze", methods=["POST"])
+@app.route("/api/analyze", methods=["POST"])
 def analyze_art():
     data = request.get_json()
     image_url = data["imageUrl"]
