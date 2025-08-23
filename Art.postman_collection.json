@@ -1,0 +1,398 @@
+{
+	"info": {
+		"_postman_id": "47301060-4dc1-4460-a045-ef9ec20361e1",
+		"name": "Art",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "35192946",
+		"_collection_link": "https://hackrx-7082.postman.co/workspace/Codefury~4470cf58-9349-469d-aa79-6896d22a504b/collection/35192946-47301060-4dc1-4460-a045-ef9ec20361e1?action=share&source=collection_link&creator=35192946"
+	},
+	"item": [
+		{
+			"name": "createArt",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "image",
+							"type": "file",
+							"src": "postman-cloud:///1f07f77d-19f7-4710-812e-684a926395f1"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{server}}/api/art/createArt",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"createArt"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllArt",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/api/art/getAllArt?page=1&limit=10",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"getAllArt"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "artForm",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get art by id",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{server}}/api/art/deleteArt/68a88de9638f2ef7e454a6b3",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"deleteArt",
+						"68a88de9638f2ef7e454a6b3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "likeArt",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/api/art/likeArt/68a88de9638f2ef7e454a6b3",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"likeArt",
+						"68a88de9638f2ef7e454a6b3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "addComment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\":\"This is a comment\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/api/art/addComment/68a88de9638f2ef7e454a6b3",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"addComment",
+						"68a88de9638f2ef7e454a6b3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deletComment from art",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\":\"This is a comment\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/api/art/deleteCommentFromArt/artId/comments/commentId",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"deleteCommentFromArt",
+						"artId",
+						"comments",
+						"commentId"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getArtistInfo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/api/art/user/68a8845bfb2ac04ef90358e1",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"user",
+						"68a8845bfb2ac04ef90358e1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "my likes",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{server}}/api/art/myLikes?page=1&limit=10",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"myLikes"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "show trending ",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{server}}/api/art/showTrending",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"showTrending"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "search by tags",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{server}}/api/art/search/tags?tags=Human",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"search",
+						"tags"
+					],
+					"query": [
+						{
+							"key": "tags",
+							"value": "Human"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "overview",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{server}}/api/art/stats/overview",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"stats",
+						"overview"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "arts leader board",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{server}}/api/art/leaderboard/artpieces",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"leaderboard",
+						"artpieces"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "analyze art using AI",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"imageUrl\":\"https://res.cloudinary.com/diioxxov8/image/upload/v1755876841/rdmkzz2vtns9pou1g47t.jpg\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://codefury-zacg.onrender.com/analyze",
+					"protocol": "https",
+					"host": [
+						"codefury-zacg",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"analyze"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get art count",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/api/art/getUserArtCount",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"art",
+						"getUserArtCount"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
