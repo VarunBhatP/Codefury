@@ -3,7 +3,6 @@ import { ApiError } from "../Utils/Api_Error.utils.js";
 import { ApiResponse } from "../Utils/Api_Response.utils.js";
 import { Art } from "../models/art.model.js";
 import { Share } from "../models/share.model.js";
-import { random } from "../Utils/generator.utils.js";
 
 const createShareLink = asyncHandler(async (req, res) => {
     const { artId } = req.params;
