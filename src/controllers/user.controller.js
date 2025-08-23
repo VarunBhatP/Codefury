@@ -14,12 +14,12 @@ const registerUser = asyncHandler(
 
         //step0: upload avatar, done as middleware  
         console.log("Receiving request body.....");
-        const { userName, email, password } = req.body;
+        const {  email, password } = req.body;
         console.log(`recived body for post method register: ${JSON.stringify(req.body)}`);
 
         //step1: validate if feilds r not empty
         if (
-            [userName, email, password]
+            [email, password]
                 .some(
                     (e) => e?.trim() === ""
                 )
@@ -32,7 +32,6 @@ const registerUser = asyncHandler(
         console.log("Checking if user already exists.....");
         const userAlreadyExists = await User.findOne({
             $or: [
-                { userName: userName }, // Check if userName exists
                 { email: email }        // Check if email exists
             ]
         });
@@ -64,7 +63,6 @@ const registerUser = asyncHandler(
         const userCreatedInDB = await User.create(
             {
                 avatar: avatarUploaded.url,
-                userName: userName.toLowerCase(),
                 email: email,
                 password: password,
 
@@ -115,9 +113,9 @@ const loginUser = asyncHandler(
 
         console.log("Fetching UI data for login...");
         console.log(`Body received for login: ${JSON.stringify(req.body)}`);
-        const { userName, email, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!(password && (userName || email))) {
+        if (!(password && (email))) {
             throw new ApiError(400, "Invalid Credentials!")
         }
 
@@ -126,7 +124,6 @@ const loginUser = asyncHandler(
         const user = await User.findOne(
             {
                 $or: [
-                    { userName: userName },
                     { email: email }
                 ],
             }
