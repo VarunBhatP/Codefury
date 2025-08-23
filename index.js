@@ -1,5 +1,5 @@
-import { app } from "./app.js";
-import connect_To_DB from "./Utils/mongo_connection.utils.js";
+import { app } from "./src/app.js";
+import connect_To_DB from "./src/Utils/mongo_connection.utils.js";
 
 connect_To_DB()
 .then(
