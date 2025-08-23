@@ -18,6 +18,9 @@ import ArtistDashboard from './components/ArtistDashboard';
 import Leaderboard from './components/Leaderboard';
 import AboutPage from './pages/AboutPage';
 import ArtUploadPage from './pages/ArtUploadPage';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentFailure from './components/PaymentFailure';
+import LeaderboardTest from './components/LeaderboardTest';
 
 function App() {
   return (
@@ -37,6 +40,9 @@ function App() {
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/upload-art" element={<ArtUploadPage />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/payment-failure" element={<PaymentFailure />} />
+                <Route path="/leaderboard-test" element={<LeaderboardTest />} />
               </Routes>
             </main>
             <Footer />

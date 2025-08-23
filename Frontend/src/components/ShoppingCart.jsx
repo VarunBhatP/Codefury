@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useArt } from '../context/ArtContext';
 import { useAuth } from '../context/AuthContext';
 import { getApiUrl } from '../config/api';
-// import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 
 const ShoppingCart = ({ isOpen, onClose }) => {
     const { cart, removeFromCart, updateQuantity } = useArt();
     const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -19,7 +21,7 @@ const ShoppingCart = ({ isOpen, onClose }) => {
         updateQuantity(id, newQuantity);
     };
 
-    const handleCheckout = async () => {
+    const handleCheckout = async (retryCount = 0) => {
         if (!isAuthenticated) {
             setError('Please login to checkout');
             return;
@@ -34,45 +36,180 @@ const ShoppingCart = ({ isOpen, onClose }) => {
         setError('');
 
         try {
-            // For now, we'll handle one item at a time
-            // In a real app, you might want to handle multiple items
-            const item = cart[0];
+            // Get all art IDs from cart
+            const artIds = cart.map(item => item.id);
+            console.log('Cart items:', cart);
+            console.log('Art IDs to send:', artIds);
             
-            const response = await fetch(getApiUrl('ORDERS', 'CREATE_PAYMENT_INTENT'), {
+            const apiUrl = getApiUrl('ORDERS', 'CREATE_PAYMENT_INTENT');
+            console.log('API URL:', apiUrl);
+            
+            const token = localStorage.getItem('accessToken');
+            console.log('Auth token exists:', !!token);
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    artId: item.id,
+                    artIds: artIds,
                 }),
             });
 
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
             if (response.ok) {
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 // Load Stripe
-                const stripe = await loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+                const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+                console.log('Stripe key exists:', !!stripeKey);
+                
+                const stripe = await loadStripe(stripeKey);
+                console.log('Stripe loaded:', !!stripe);
                 
                 if (stripe) {
-                    const { error } = await stripe.confirmPayment({
-                        clientSecret: data.data.clientSecret,
-                        confirmParams: {
-                            return_url: `${window.location.origin}/payment-success`,
-                        },
-                    });
+                    try {
+                        console.log('Confirming payment with client secret:', data.data.clientSecret.substring(0, 20) + '...');
+                        console.log('Payment amount:', data.data.totalAmount);
+                        console.log('Item count:', data.data.itemCount);
+                        
+                        // First, check the payment intent status
+                        const { error: retrieveError, paymentIntent: existingIntent } = await stripe.retrievePaymentIntent(data.data.clientSecret);
+                        
+                        if (retrieveError) {
+                            console.log('Error retrieving payment intent:', retrieveError);
+                            setError('Payment intent error. Please try again.');
+                            return;
+                        }
+                        
+                        console.log('Payment intent status:', existingIntent.status);
+                        
+                        // Only confirm if the payment intent is in the correct state
+                        if (existingIntent.status === 'requires_payment_method') {
+                            const { error, paymentIntent } = await stripe.confirmPayment({
+                                clientSecret: data.data.clientSecret,
+                                confirmParams: {
+                                    return_url: `${window.location.origin}/payment-success`,
+                                    payment_method_data: {
+                                        billing_details: {
+                                            name: 'Test Customer', // You can get this from user profile
+                                        },
+                                    },
+                                },
+                                redirect: 'if_required',
+                            });
 
-                    if (error) {
-                        setError(error.message);
+                            console.log('Stripe confirmation result:', { error, paymentIntent });
+
+                            if (error) {
+                                console.log('Stripe confirmation error:', error);
+                                
+                                // Handle specific Stripe errors
+                                if (error.type === 'card_error') {
+                                    setError(`Card error: ${error.message}`);
+                                } else if (error.type === 'validation_error') {
+                                    setError(`Validation error: ${error.message}`);
+                                } else if (error.type === 'invalid_request_error') {
+                                    if (error.code === 'payment_intent_unexpected_state') {
+                                        if (retryCount < 2) {
+                                            console.log(`Retrying payment confirmation (attempt ${retryCount + 1})`);
+                                            setLoading(false);
+                                            setTimeout(() => handleCheckout(retryCount + 1), 1000);
+                                            return;
+                                        } else {
+                                            setError('Payment session expired. Please try again.');
+                                        }
+                                    } else {
+                                        setError('Invalid payment request. Please try again.');
+                                    }
+                                } else {
+                                    setError(error.message || 'Payment confirmation failed');
+                                }
+                                
+                                // For critical errors, redirect to failure page
+                                if (error.type === 'invalid_request_error' || error.type === 'api_error') {
+                                    const errorMessage = encodeURIComponent(error.message || 'Payment failed');
+                                    navigate(`/payment-failure?error_message=${errorMessage}`);
+                                }
+                            } else if (paymentIntent) {
+                                console.log('Payment confirmed successfully:', paymentIntent.status);
+                                // Payment was successful, user will be redirected
+                            }
+                        } else if (existingIntent.status === 'succeeded') {
+                            console.log('Payment already succeeded');
+                            // Payment was already successful, redirect to success page
+                            window.location.href = '/payment-success';
+                        } else if (existingIntent.status === 'canceled') {
+                            console.log('Payment was canceled');
+                            setError('Payment was canceled. Please try again.');
+                        } else {
+                            console.log('Unexpected payment intent status:', existingIntent.status);
+                            setError('Payment session error. Please try again.');
+                        }
+
+                        if (error) {
+                            console.log('Stripe confirmation error:', error);
+                            
+                            // Handle specific Stripe errors
+                            if (error.type === 'card_error') {
+                                setError(`Card error: ${error.message}`);
+                            } else if (error.type === 'validation_error') {
+                                setError(`Validation error: ${error.message}`);
+                            } else if (error.type === 'invalid_request_error') {
+                                setError('Invalid payment request. Please try again.');
+                            } else {
+                                setError(error.message || 'Payment confirmation failed');
+                            }
+                            
+                            // For critical errors, redirect to failure page
+                            if (error.type === 'invalid_request_error' || error.type === 'api_error') {
+                                const errorMessage = encodeURIComponent(error.message || 'Payment failed');
+                                navigate(`/payment-failure?error_message=${errorMessage}`);
+                            }
+                        } else if (paymentIntent) {
+                            console.log('Payment confirmed successfully:', paymentIntent.status);
+                            // Payment was successful, user will be redirected
+                        }
+                    } catch (stripeError) {
+                        console.log('Stripe confirmation catch error:', stripeError);
+                        setError('Payment confirmation failed. Please try again.');
                     }
+                } else {
+                    setError('Stripe failed to load. Please refresh the page and try again.');
                 }
             } else {
                 const errorData = await response.json();
-                setError(errorData.message || 'Checkout failed');
+                console.log('Error response:', errorData);
+                
+                // Handle specific HTTP status codes
+                if (response.status === 500) {
+                    setError('Server error. Please try again later or contact support.');
+                } else if (response.status === 408) {
+                    setError('Request timeout. Please try again.');
+                } else if (response.status === 400) {
+                    setError(errorData.message || 'Invalid request. Please check your cart items.');
+                } else if (response.status === 401) {
+                    setError('Authentication required. Please log in again.');
+                } else {
+                    setError(errorData.message || 'Checkout failed. Please try again.');
+                }
             }
         } catch (error) {
-            setError('Checkout failed. Please try again.');
+            console.log('Catch error:', error);
+            
+            // Provide more specific error messages
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                setError('Network error. Please check your connection and try again.');
+            } else if (error.message.includes('timeout')) {
+                setError('Request timed out. The server is taking too long to respond. Please try again.');
+            } else {
+                setError('Checkout failed. Please try again or contact support if the problem persists.');
+            }
         } finally {
             setLoading(false);
         }

@@ -16,7 +16,17 @@ const EnvTest = () => {
                     <strong>Sample API URL:</strong> {getApiUrl('USERS', 'REGISTER')}
                 </div>
                 <div>
+                    <strong>Orders API URL:</strong> {getApiUrl('ORDERS', 'CREATE_PAYMENT_INTENT')}
+                </div>
+                <div>
                     <strong>VITE_STRIPE_PUBLISHABLE_KEY:</strong> {import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? 'SET' : 'NOT SET'}
+                </div>
+                <div>
+                    <strong>Stripe Key Preview:</strong> {import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? 
+                        `${import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY.substring(0, 20)}...` : 'NOT SET'}
+                </div>
+                <div>
+                    <strong>Access Token:</strong> {localStorage.getItem('accessToken') ? 'EXISTS' : 'NOT FOUND'}
                 </div>
             </div>
         </div>

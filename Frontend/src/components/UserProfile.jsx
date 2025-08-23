@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import UserOrders from './UserOrders';
 
 const UserProfile = () => {
     const { user, updateProfile, updateAvatar, logout } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [activeTab, setActiveTab] = useState('profile'); // 'profile' or 'orders'
     const [formData, setFormData] = useState({
         userName: user?.userName || '',
         email: user?.email || ''
@@ -126,6 +128,30 @@ const UserProfile = () => {
                         </button>
                     </div>
 
+                    {/* Tab Navigation */}
+                    <div className="flex border-b border-gray-200 mb-6">
+                        <button
+                            onClick={() => setActiveTab('profile')}
+                            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                                activeTab === 'profile'
+                                    ? 'border-orange-600 text-orange-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Profile
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('orders')}
+                            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                                activeTab === 'orders'
+                                    ? 'border-orange-600 text-orange-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            Orders
+                        </button>
+                    </div>
+
                     {/* Messages */}
                     {error && (
                         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -138,55 +164,64 @@ const UserProfile = () => {
                         </div>
                     )}
 
-                    {/* Edit Form */}
-                    {isEditing && (
-                        <form onSubmit={handleProfileUpdate} className="space-y-4">
-                            <div>
-                                <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Username
-                                </label>
-                                <input
-                                    type="text"
-                                    id="userName"
-                                    name="userName"
-                                    value={formData.userName}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    required
-                                />
-                            </div>
+                    {/* Tab Content */}
+                    {activeTab === 'profile' && (
+                        <>
+                            {/* Edit Form */}
+                            {isEditing && (
+                                <form onSubmit={handleProfileUpdate} className="space-y-4">
+                                    <div>
+                                        <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Username
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="userName"
+                                            name="userName"
+                                            value={formData.userName}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                            required
+                                        />
+                                    </div>
 
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    required
-                                />
-                            </div>
+                                    <div>
+                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                            required
+                                        />
+                                    </div>
 
-                            <div className="flex gap-4">
-                                <button
-                                    type="submit"
-                                    className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-                                >
-                                    Save Changes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditing(false)}
-                                    className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
+                                    <div className="flex gap-4">
+                                        <button
+                                            type="submit"
+                                            className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                                        >
+                                            Save Changes
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditing(false)}
+                                            className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </>
+                    )}
+
+                    {activeTab === 'orders' && (
+                        <UserOrders />
                     )}
                 </div>
             </div>

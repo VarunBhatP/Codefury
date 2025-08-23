@@ -1,296 +1,290 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useArt } from '../context/ArtContext';
 import { Link } from 'react-router-dom';
-import { authenticatedFetch } from '../utils/apiUtils';
+import { useAuth } from '../context/AuthContext';
+import { getApiUrl } from '../config/api';
 
 const ArtistDashboard = () => {
-    const { user, refreshAccessToken } = useAuth();
-    const { artworks, refreshArtworks } = useArt();
-    const [stats, setStats] = useState({
-        totalArtworks: 0,
-        totalLikes: 0,
-        totalViews: 0,
-        totalSales: 0,
-        totalEarnings: 0
+    const { user, isAuthenticated } = useAuth();
+    const [dashboardData, setDashboardData] = useState({
+        stats: {
+            totalArtworks: 0,
+            totalForSale: 0,
+            totalLikes: 0,
+            totalComments: 0,
+            avgPrice: 0,
+            totalViews: 0
+        },
+        recentArtworks: [],
+        artFormStats: [],
+        monthlyUploads: [],
+        topArtworks: []
     });
-    const [recentArtworks, setRecentArtworks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (user) {
-            fetchArtistStats();
-            fetchRecentArtworks();
+        if (isAuthenticated && user) {
+            fetchDashboardData();
         }
-    }, [user, artworks]); // Re-run when artworks change
+    }, [isAuthenticated, user]);
 
-    const fetchArtistStats = async () => {
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        setError('');
+
         try {
-            // First try to get stats from context
-            const userArtworks = artworks.filter(art => art.artistId === user._id);
-            
-            if (userArtworks.length > 0) {
-                const totalLikes = userArtworks.reduce((sum, art) => sum + (art.likes || 0), 0);
-                const totalViews = userArtworks.reduce((sum, art) => sum + (art.views || 0), 0);
-                const totalSales = userArtworks.filter(art => art.isSold).length;
-                const totalEarnings = userArtworks
-                    .filter(art => art.isSold)
-                    .reduce((sum, art) => sum + (art.price || 0), 0);
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(getApiUrl('ARTS', 'ARTIST_STATS'), {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
-                setStats({
-                    totalArtworks: userArtworks.length,
-                    totalLikes,
-                    totalViews,
-                    totalSales,
-                    totalEarnings
-                });
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Dashboard data:', data);
+                setDashboardData(data.data);
             } else {
-                // Fallback to API call
-                const response = await authenticatedFetch(
-                    `http://localhost:8080/api/art/user/${user._id}`,
-                    { method: 'GET' },
-                    refreshAccessToken
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const artworks = data.data;
-                    
-                    const totalLikes = artworks.reduce((sum, art) => sum + (art.likes?.length || 0), 0);
-                    const totalViews = artworks.reduce((sum, art) => sum + (art.views || 0), 0);
-                    const totalSales = artworks.filter(art => art.isSold).length;
-                    const totalEarnings = artworks
-                        .filter(art => art.isSold)
-                        .reduce((sum, art) => sum + (art.price || 0), 0);
-
-                    setStats({
-                        totalArtworks: artworks.length,
-                        totalLikes,
-                        totalViews,
-                        totalSales,
-                        totalEarnings
-                    });
-                }
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Failed to fetch dashboard data:', errorData);
+                setError(`Failed to load dashboard: ${errorData.message || response.statusText}`);
             }
         } catch (error) {
-            console.error('Failed to fetch artist stats:', error);
-        }
-    };
-
-    const fetchRecentArtworks = async () => {
-        try {
-            // First try to get from context
-            const userArtworks = artworks.filter(art => art.artistId === user._id);
-            
-            if (userArtworks.length > 0) {
-                // Sort by creation date and take the 5 most recent
-                const sortedArtworks = userArtworks
-                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                    .slice(0, 5);
-                setRecentArtworks(sortedArtworks);
-            } else {
-                // Fallback to API call
-                const response = await authenticatedFetch(
-                    `http://localhost:8080/api/art/user/${user._id}?limit=5`,
-                    { method: 'GET' },
-                    refreshAccessToken
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setRecentArtworks(data.data);
-                }
-            }
-        } catch (error) {
-            console.error('Failed to fetch recent artworks:', error);
+            console.error('Error fetching dashboard data:', error);
+            setError(`Failed to load dashboard: ${error.message}`);
         } finally {
             setLoading(false);
         }
     };
 
     const handleRefresh = () => {
-        refreshArtworks();
-        fetchArtistStats();
-        fetchRecentArtworks();
+        fetchDashboardData();
     };
 
-    if (!user) return null;
+    if (!isAuthenticated) {
+        return (
+            <div className="bg-orange-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-orange-900 mb-4">Authentication Required</h2>
+                    <p className="text-gray-600 mb-4">Please log in to access your artist dashboard.</p>
+                    <Link
+                        to="/login"
+                        className="bg-orange-800 text-white font-bold py-2 px-4 rounded hover:bg-orange-900 transition-colors"
+                    >
+                        Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="bg-orange-50 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-800 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading your dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-orange-50 min-h-screen flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto">
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <p className="text-lg font-semibold mb-2">Error Loading Dashboard</p>
+                        <p className="text-sm mb-4">{error}</p>
+                        <button 
+                            onClick={handleRefresh} 
+                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-orange-900 mb-2">Artist Dashboard</h1>
-                <p className="text-gray-600">Welcome back, {user.userName}! Here's your creative journey overview.</p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+        <div className="bg-orange-50 min-h-screen">
+            <div className="container mx-auto px-6 py-12">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-bold font-serif text-orange-900">Artist Dashboard</h1>
+                        <p className="text-lg text-gray-700 mt-2">Welcome back, <span className="font-semibold">{user?.userName}</span>!</p>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{stats.totalArtworks}</h3>
-                    <p className="text-gray-600 text-sm">Total Artworks</p>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{stats.totalLikes}</h3>
-                    <p className="text-gray-600 text-sm">Total Likes</p>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{stats.totalViews}</h3>
-                    <p className="text-gray-600 text-sm">Total Views</p>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{stats.totalSales}</h3>
-                    <p className="text-gray-600 text-sm">Total Sales</p>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                        </svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">₹{stats.totalEarnings.toLocaleString()}</h3>
-                    <p className="text-gray-600 text-sm">Total Earnings</p>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-orange-900">Quick Actions</h3>
-                    <button
-                        onClick={handleRefresh}
-                        className="text-orange-800 hover:text-orange-900 font-medium text-sm underline"
-                    >
-                        Refresh Data
-                    </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Link
                         to="/upload-art"
-                        className="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                        className="mt-4 md:mt-0 bg-orange-800 text-white font-bold py-3 px-6 rounded-full hover:bg-orange-900 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center space-x-2"
                     >
-                        <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center mr-4">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 className="font-medium text-gray-900">Upload New Art</h4>
-                            <p className="text-sm text-gray-600">Share your latest creation</p>
-                        </div>
-                    </Link>
-
-                    <Link
-                        to="/profile"
-                        className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                    >
-                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-4">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 className="font-medium text-gray-900">Edit Profile</h4>
-                            <p className="text-sm text-gray-600">Update your information</p>
-                        </div>
-                    </Link>
-
-                    <Link
-                        to="/orders"
-                        className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-                    >
-                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center mr-4">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 className="font-medium text-gray-900">View Orders</h4>
-                            <p className="text-sm text-gray-600">Check your sales</p>
-                        </div>
-                    </Link>
-                </div>
-            </div>
-
-            {/* Recent Artworks */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-orange-900">Recent Artworks</h3>
-                    <Link
-                        to="/gallery"
-                        className="text-orange-800 hover:text-orange-900 font-medium text-sm underline"
-                    >
-                        View All
-                    </Link>
-                </div>
-
-                {loading ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
-                        <p className="text-gray-500 mt-2">Loading...</p>
-                    </div>
-                ) : recentArtworks.length === 0 ? (
-                    <div className="text-center py-8">
-                        <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        <p className="text-gray-500 text-lg">No artworks yet</p>
-                        <p className="text-gray-400 text-sm">Start creating to see your work here</p>
+                        <span>Upload New Art</span>
+                    </Link>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
+                    <StatCard icon="art" value={dashboardData.stats.totalArtworks} label="Total Artworks" />
+                    <StatCard icon="likes" value={dashboardData.stats.totalLikes.toLocaleString()} label="Total Likes" />
+                    <StatCard icon="views" value={dashboardData.stats.totalViews.toLocaleString()} label="Total Views" />
+                    <StatCard icon="comments" value={dashboardData.stats.totalComments.toLocaleString()} label="Comments" />
+                    <StatCard icon="sales" value={dashboardData.stats.totalForSale} label="For Sale" />
+                    <StatCard icon="earnings" value={`₹${dashboardData.stats.avgPrice.toLocaleString()}`} label="Avg Price" />
+                </div>
+
+                {/* Main Content Area */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Recent Artworks */}
+                    <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-2xl font-bold text-orange-900 font-serif">Your Recent Work</h3>
+                            <Link to="/gallery" className="text-orange-800 hover:underline font-medium text-sm">View All</Link>
+                        </div>
+                        {dashboardData.recentArtworks.length > 0 ? (
+                            <div className="space-y-4">
+                                {dashboardData.recentArtworks.map(art => (
+                                    <ArtworkRow key={art._id} artwork={art} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-10">
+                                <p className="text-gray-500">You haven't uploaded any art yet.</p>
+                                <Link
+                                    to="/upload-art"
+                                    className="mt-4 inline-block bg-orange-800 text-white font-bold py-2 px-4 rounded hover:bg-orange-900 transition-colors"
+                                >
+                                    Upload Your First Artwork
+                                </Link>
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {recentArtworks.map((artwork) => (
-                            <div key={artwork.id} className="bg-gray-50 rounded-lg overflow-hidden">
-                                <img
-                                    src={artwork.imageURL}
-                                    alt={artwork.title}
-                                    className="w-full h-48 object-cover"
-                                />
-                                <div className="p-4">
-                                    <h4 className="font-medium text-gray-900 mb-2">{artwork.title}</h4>
-                                    <p className="text-sm text-gray-600 mb-3">{artwork.description.substring(0, 100)}...</p>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-500">{artwork.category}</span>
-                                        <div className="flex items-center space-x-2">
-                                            <span className="text-sm text-gray-500">{artwork.likes || 0} likes</span>
-                                            {artwork.isForSale && (
-                                                <span className="text-orange-800 font-medium">₹{artwork.price}</span>
-                                            )}
-                                        </div>
+
+                    {/* Quick Actions & Stats */}
+                    <div className="space-y-6">
+                        {/* Quick Actions */}
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                            <h3 className="text-2xl font-bold text-orange-900 font-serif mb-4">Quick Actions</h3>
+                            <div className="space-y-3">
+                                <ActionLink to="/profile" icon="profile" text="Edit Your Profile" />
+                                {/* <ActionLink to="/orders" icon="orders" text="Manage Orders" /> */}
+                                {/* <ActionLink to="/settings" icon="settings" text="Account Settings" /> */}
+                                <button onClick={handleRefresh} className="w-full text-left flex items-center p-3 text-gray-700 rounded-lg hover:bg-orange-50 transition-colors">
+                                    <div className="w-8 h-8 flex items-center justify-center mr-3">
+                                        <RefreshIcon />
                                     </div>
+                                    <span className="font-medium">Refresh Data</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Art Form Distribution */}
+                        {dashboardData.artFormStats.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <h3 className="text-xl font-bold text-orange-900 font-serif mb-4">Art Forms</h3>
+                                <div className="space-y-2">
+                                    {dashboardData.artFormStats.map((form, index) => (
+                                        <div key={form._id} className="flex justify-between items-center">
+                                            <span className="text-gray-700">{form._id}</span>
+                                            <span className="font-semibold text-orange-800">{form.count}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ))}
+                        )}
+
+                        {/* Top Performing Artworks */}
+                        {dashboardData.topArtworks.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <h3 className="text-xl font-bold text-orange-900 font-serif mb-4">Top Performers</h3>
+                                <div className="space-y-3">
+                                    {dashboardData.topArtworks.map((art, index) => (
+                                        <div key={art._id} className="flex items-center space-x-3">
+                                            <div className="w-6 h-6 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-sm font-bold">
+                                                {index + 1}
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="font-medium text-gray-800 truncate">{art.title}</p>
+                                                <p className="text-sm text-gray-500">{art.likeCount} likes</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );
 };
 
-export default ArtistDashboard; 
+// --- Sub-components for Cleaner Layout ---
+
+const StatCard = ({ icon, value, label }) => {
+    const icons = {
+        art: <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+        likes: <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
+        views: <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
+        comments: <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+        sales: <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+        earnings: <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>,
+    };
+    const bgColors = {
+        art: "bg-orange-100", likes: "bg-red-100", views: "bg-blue-100", comments: "bg-green-100", sales: "bg-green-100", earnings: "bg-purple-100"
+    };
+    return (
+        <div className="bg-white rounded-lg shadow-md p-4 text-center transition-transform hover:-translate-y-1">
+            <div className={`w-12 h-12 ${bgColors[icon]} rounded-full flex items-center justify-center mx-auto mb-3`}>
+                {icons[icon]}
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+            <p className="text-gray-500 text-sm font-medium">{label}</p>
+        </div>
+    );
+};
+
+const ArtworkRow = ({ artwork }) => (
+    <div className="flex items-center space-x-4 p-3 rounded-lg hover:bg-orange-50">
+        <img 
+            src={artwork.images?.[0] || 'https://placehold.co/80x80/e9c46a/264653?text=Art'} 
+            alt={artwork.title} 
+            className="w-20 h-20 rounded-md object-cover" 
+        />
+        <div className="flex-1">
+            <h4 className="font-bold text-gray-800">{artwork.title}</h4>
+            <p className="text-sm text-gray-500">{artwork.artForm}</p>
+        </div>
+        <div className="text-right">
+            <p className="font-semibold text-gray-700">{artwork.likes?.length || 0} Likes</p>
+            <p className="text-sm text-gray-500">{artwork.comments?.length || 0} Comments</p>
+        </div>
+    </div>
+);
+
+const ActionLink = ({ to, icon, text }) => {
+    const icons = {
+        profile: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+        orders: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+        settings: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+    };
+    return (
+        <Link to={to} className="flex items-center p-3 text-gray-700 rounded-lg hover:bg-orange-50 transition-colors">
+            <div className="w-8 h-8 flex items-center justify-center mr-3">{icons[icon]}</div>
+            <span className="font-medium">{text}</span>
+        </Link>
+    );
+};
+
+const RefreshIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0120.5 15M20 20l-1.5-1.5A9 9 0 003.5 9" />
+    </svg>
+);
+
+export default ArtistDashboard;

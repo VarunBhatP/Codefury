@@ -137,6 +137,10 @@ export const ArtProvider = ({ children }) => {
         );
     };
 
+    const clearCart = () => {
+        setCart([]);
+    };
+
     const refreshArtworks = () => {
         fetchArtworks();
     };
@@ -152,6 +156,7 @@ export const ArtProvider = ({ children }) => {
             addToCart, 
             removeFromCart, 
             updateQuantity,
+            clearCart,
             addArtwork,
             refreshArtworks
         }}>

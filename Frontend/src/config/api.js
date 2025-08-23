@@ -28,11 +28,13 @@ export const API_CONFIG = {
             DELETE_COMMENT: '/art/deleteCommentFromArt',
             LEADERBOARD_ARTISTS: '/art/leaderboard/artists',
             LEADERBOARD_ARTWORKS: '/art/leaderboard/artpieces',
+            ARTIST_STATS: '/art/artist/stats',
         },
         
         // Order endpoints
         ORDERS: {
             CREATE_PAYMENT_INTENT: '/orders/create-payment-intent',
+            GET_USER_ORDERS: '/orders/user-orders',
         }
     }
 };
