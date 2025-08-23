@@ -36,100 +36,33 @@ const ShoppingCart = ({ isOpen, onClose }) => {
         setError('');
 
         try {
-            // Get all art IDs from cart
-            const artIds = cart.map(item => item.id);
-            console.log('Cart items:', cart);
-            console.log('Art IDs to send:', artIds);
+            // Calculate total amount from cart items
+            const totalAmount = calculateTotal();
+            const itemCount = cart.length;
             
-            const apiUrl = getApiUrl('ORDERS', 'CREATE_PAYMENT_INTENT');
-            console.log('API URL:', apiUrl);
+            console.log('Processing dummy payment...');
+            console.log('Payment amount:', totalAmount);
+            console.log('Item count:', itemCount);
             
-            const token = localStorage.getItem('accessToken');
-            console.log('Auth token exists:', !!token);
+            // Simulate payment processing with loading delay
+            await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
             
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    artIds: artIds,
-                }),
-            });
-
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Response data:', data);
-                
-                // Load Stripe
-                const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-                console.log('Stripe key exists:', !!stripeKey);
-                
-                const stripe = await loadStripe(stripeKey);
-                console.log('Stripe loaded:', !!stripe);
-                
-                if (stripe) {
-                    try {
-                        console.log('Confirming payment with client secret:', data.data.clientSecret.substring(0, 20) + '...');
-                        console.log('Payment amount:', data.data.totalAmount);
-                        console.log('Item count:', data.data.itemCount);
-                        
-                        // Use confirmPayment without retrieving payment intent first
-                        const { error } = await stripe.confirmPayment({
-                            clientSecret: data.data.clientSecret,
-                            confirmParams: {
-                                return_url: `${window.location.origin}/payment-success`,
-                            },
-                        });
-
-                        if (error) {
-                            console.log('Payment confirmation error:', error);
-                            if (error.code === 'payment_intent_unexpected_state') {
-                                // Don't retry automatically, just show error
-                                setError('Payment session has expired. Please try again with a fresh cart.');
-                            } else {
-                                setError(error.message || 'Payment failed. Please try again.');
-                            }
-                        }
-                    } catch (stripeError) {
-                        console.log('Stripe confirmation catch error:', stripeError);
-                        setError('Payment confirmation failed. Please try again.');
-                    }
-                } else {
-                    setError('Stripe failed to load. Please refresh the page and try again.');
-                }
+            // Simulate random payment success/failure (90% success rate)
+            const paymentSuccess = Math.random() > 0.1;
+            
+            if (paymentSuccess) {
+                console.log('Dummy payment successful!');
+                // Clear cart after successful payment
+                cart.forEach(item => removeFromCart(item.id));
+                // Redirect to success page with dummy flag
+                navigate(`/payment-success?dummy=true&amount=${totalAmount}&items=${itemCount}`);
             } else {
-                const errorData = await response.json();
-                console.log('Error response:', errorData);
-                
-                // Handle specific HTTP status codes
-                if (response.status === 500) {
-                    setError('Server error. Please try again later or contact support.');
-                } else if (response.status === 408) {
-                    setError('Request timeout. Please try again.');
-                } else if (response.status === 400) {
-                    setError(errorData.message || 'Invalid request. Please check your cart items.');
-                } else if (response.status === 401) {
-                    setError('Authentication required. Please log in again.');
-                } else {
-                    setError(errorData.message || 'Checkout failed. Please try again.');
-                }
+                console.log('Dummy payment failed');
+                setError('Payment failed. Please try again.');
             }
         } catch (error) {
-            console.log('Catch error:', error);
-            
-            // Provide more specific error messages
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                setError('Network error. Please check your connection and try again.');
-            } else if (error.message.includes('timeout')) {
-                setError('Request timed out. The server is taking too long to respond. Please try again.');
-            } else {
-                setError('Checkout failed. Please try again or contact support if the problem persists.');
-            }
+            console.log('Dummy payment error:', error);
+            setError('Payment processing failed. Please try again.');
         } finally {
             setLoading(false);
         }

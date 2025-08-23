@@ -59,7 +59,7 @@ const ArtCard = ({ artwork }) => {
                 {/* Artist Actions */}
                 {isOwner && (
                     <div className="flex flex-col gap-2 mb-2">
-                        <Link
+                        {/* <Link
                             to={`/edit-artwork/${artwork.id}`}
                             className="p-2 rounded-full bg-blue-500/80 backdrop-blur-sm shadow-md hover:bg-blue-500 text-white"
                             title="Edit Artwork"
@@ -67,7 +67,7 @@ const ArtCard = ({ artwork }) => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                        </Link>
+                        </Link> */}
                         <button
                             onClick={() => handleDeleteArtwork(artwork.id)}
                             className="p-2 rounded-full bg-red-500/80 backdrop-blur-sm shadow-md hover:bg-red-500 text-white"
