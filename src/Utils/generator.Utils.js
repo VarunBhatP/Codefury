@@ -1,5 +1,5 @@
 
-export function random(len){
+const random=(len)=>{
     let ans="";
     let options = "1234567890qwertyuiopasdfghjklzxcvbnm";
     let length = options.length;
@@ -10,4 +10,7 @@ export function random(len){
     }
     return ans;
     
+}
+export{
+    random
 }
