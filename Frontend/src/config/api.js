@@ -1,7 +1,7 @@
 // API Configuration using Vite environment variables
 export const API_CONFIG = {
     // Base URL for all API calls
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || ':https://codefury-1-top1.onrender.com',
     
     // Stripe configuration
     STRIPE_PUBLISHABLE_KEY: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,

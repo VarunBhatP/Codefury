@@ -18,7 +18,7 @@ export const ArtProvider = ({ children }) => {
             setLoading(true);
             setError(null);
             
-            const response = await fetch('http://localhost:8080/api/art/getAllArt', {
+            const response = await fetch('https://codefury-1-top1.onrender.com/api/art/getAllArt', {
                 method: 'GET'
             });
 
@@ -94,7 +94,7 @@ export const ArtProvider = ({ children }) => {
     const toggleLike = async (id) => {
         try {
             const response = await authenticatedFetch(
-                `http://localhost:8080/api/art/likeArt/${id}`,
+                `https://codefury-1-top1.onrender.com/api/art/likeArt/${id}`,
                 { method: 'PATCH' },
                 refreshAccessToken
             );

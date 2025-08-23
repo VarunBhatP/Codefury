@@ -79,7 +79,7 @@ const ArtUploadForm = ({ onClose, onSuccess }) => {
             });
 
             const response = await authenticatedFormDataFetch(
-                'http://localhost:8080/api/art/createArt',
+                'https://codefury-1-top1.onrender.com/api/art/createArt',
                 formDataToSend,
                 { method: 'POST' },
                 refreshAccessToken

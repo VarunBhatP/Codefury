@@ -17,7 +17,7 @@ const ArtCard = ({ artwork }) => {
     const handleDeleteArtwork = async (artworkId) => {
         if (window.confirm('Are you sure you want to delete this artwork?')) {
             try {
-                const response = await fetch(`http://localhost:8080/api/art/deleteArt/${artworkId}`, {
+                const response = await fetch(`https://codefury-1-top1.onrender.com/api/art/deleteArt/${artworkId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,

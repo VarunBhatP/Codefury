@@ -28,7 +28,7 @@ const ArtworkDetailPage = () => {
             } else {
                 // If not found in context, fetch from backend
                 try {
-                    const response = await fetch(`http://localhost:8080/api/art/getArtById/${id}`);
+                    const response = await fetch(`https://codefury-1-top1.onrender.com/api/art/getArtById/${id}`);
                     
                     if (response.ok) {
                         const data = await response.json();

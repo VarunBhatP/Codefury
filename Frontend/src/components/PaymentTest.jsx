@@ -36,7 +36,7 @@ const PaymentTest = () => {
         setResult('Testing payment intent creation...');
 
         try {
-            const response = await fetch('http://localhost:8080/api/orders/create-payment-intent', {
+            const response = await fetch('https://codefury-1-top1.onrender.com/api/orders/create-payment-intent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
