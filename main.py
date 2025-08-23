@@ -5,10 +5,10 @@ import requests
 import io
 import numpy as np
 from sklearn.cluster import KMeans
-
+from flask_cors import CORS
 app = Flask(__name__)
-
-@app.route("/analyze", methods=["POST"])
+CORS(app)
+CORS(app)
 def analyze_art():
     data = request.get_json()
     image_url = data["imageUrl"]
