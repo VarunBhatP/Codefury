@@ -23,7 +23,7 @@ import { upload } from "../middleware/multer.middle_ware.js";
 const router = Router();
 
 // Apply JWT verification to all routes that require authentication
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 // Create new art piece (requires authentication and file upload)
 router.post(

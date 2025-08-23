@@ -11,7 +11,10 @@ const app = express()
 app.use(
     cors(//allow access for all
         {
-            origin: process.env.CORS_ORIGIN
+            origin: process.env.CORS_ORIGIN,
+            credentials: true, // THIS IS CRITICAL for cookies to work
+            methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+            allowedHeaders: ["Content-Type", "Authorization"]
         }
     )
 )

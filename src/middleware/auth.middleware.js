@@ -8,7 +8,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     console.log("Matching JWT tokens...");
     console.log("Fetching current token...");
 
-    const currJwtToken = req.cookies?.refreshToken || 
+    const currJwtToken = req.cookies?.refreshToken || req.cookies?.accessToken||
         req.header("authorization")?.replace(/Bearer\s*/i, "").trim();
 
      console.log(`Cookies received: ${JSON.stringify(req.cookies)}, headers received: ${JSON.stringify(req.headers)}`);

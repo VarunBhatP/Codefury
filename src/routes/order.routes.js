@@ -5,7 +5,7 @@ import { createStripePaymentIntent, handleStripeWebhook } from "../controllers/o
 const router = Router();
 
 // Secure route to create a payment intent
-router.route("/create-payment-intent").post(verifyJWT, createStripePaymentIntent);
+router.route("/create-payment-intent").post(createStripePaymentIntent);
 
 // Public route for Stripe to send webhook events to
 router.route("/webhook").post(handleStripeWebhook);

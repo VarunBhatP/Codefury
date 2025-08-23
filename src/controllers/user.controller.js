@@ -146,8 +146,7 @@ const loginUser = asyncHandler(
         console.log("Starting generation of refresh token and passing them as cookies so that user data can be accessed via cookies in logged in session...");
 
         const { accessToken, refreshToken } = await get_refresh_access_token(user._id)
-
-        console.log("Sent these tokens as cookies for logged session...");
+        console.log(`Sent these tokens as cookies for logged session...${accessToken}`);
 
         return res
             .status(200)
@@ -155,7 +154,7 @@ const loginUser = asyncHandler(
                 "accessToken",
                 accessToken,
                 {
-                    httpOnly: true,
+                    httpOnly: false,
                     secure: false
                 }
             )
