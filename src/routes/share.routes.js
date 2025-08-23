@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createShareLink, getSharedContent } from "../controller/share.controller.js";
+import { createShareLink, getSharedContent } from "../controllers/share.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
