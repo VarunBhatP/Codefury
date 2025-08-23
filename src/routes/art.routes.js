@@ -14,7 +14,8 @@ import {
     searchArtByTags,
     getArtStats,
     getArtistLeaderboard,
-    getTopArtPieces
+    getTopArtPieces,
+    getUserArtCount
 } from "../controllers/art.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middle_ware.js";
@@ -80,5 +81,8 @@ router.get("/leaderboard/artists", getArtistLeaderboard);
 
 // Get top performing art pieces (public route)
 router.get("/leaderboard/artpieces", getTopArtPieces);
+
+//to et art count of user
+router.get('/getUserArtCount',getUserArtCount);
 
 export default router;

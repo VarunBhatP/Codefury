@@ -741,6 +741,19 @@ const getTopArtPieces = asyncHandler(async (req, res) => {
         }, "Top art pieces retrieved successfully!")
     );
 });
+// Function to fetch number of artworks of current user
+const getUserArtCount = asyncHandler(async (req, res) => {
+    if (!req.user || !req.user._id) {
+        throw new ApiError(401, "Unauthorized: User not found in request");
+    }
+
+    const artCount = await Art.countDocuments({ artist: req.user._id });
+    const isVerified=(artCount>=3);
+
+    return res.status(200).json(
+        new ApiResponse(200, { artCount ,isVerified:isVerified}, "Number of artworks fetched successfully")
+    );
+});
 
 export {
     createArt,
@@ -757,5 +770,6 @@ export {
     searchArtByTags,
     getArtStats,
     getArtistLeaderboard,
-    getTopArtPieces
+    getTopArtPieces,
+    getUserArtCount
 };
