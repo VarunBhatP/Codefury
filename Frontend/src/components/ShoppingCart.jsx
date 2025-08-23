@@ -78,36 +78,22 @@ const ShoppingCart = ({ isOpen, onClose }) => {
                         console.log('Payment amount:', data.data.totalAmount);
                         console.log('Item count:', data.data.itemCount);
                         
-                        // Direct payment confirmation with automatic payment methods
-                        const { error, paymentIntent } = await stripe.confirmPayment({
+                        // Use confirmPayment without retrieving payment intent first
+                        const { error } = await stripe.confirmPayment({
                             clientSecret: data.data.clientSecret,
                             confirmParams: {
                                 return_url: `${window.location.origin}/payment-success`,
                             },
-                            redirect: 'always',
                         });
 
                         if (error) {
-                            console.log('Stripe confirmation error:', error);
-                            
-                            if (error.type === 'card_error') {
-                                setError(`Card error: ${error.message}`);
-                            } else if (error.type === 'validation_error') {
-                                setError(`Validation error: ${error.message}`);
-                            } else if (error.code === 'payment_intent_unexpected_state') {
-                                setError('Payment session expired. Creating a new payment session...');
-                                // Create a new payment intent by retrying
-                                if (retryCount < 2) {
-                                    setLoading(false);
-                                    setTimeout(() => handleCheckout(retryCount + 1), 1000);
-                                    return;
-                                }
+                            console.log('Payment confirmation error:', error);
+                            if (error.code === 'payment_intent_unexpected_state') {
+                                // Don't retry automatically, just show error
+                                setError('Payment session has expired. Please try again with a fresh cart.');
                             } else {
                                 setError(error.message || 'Payment failed. Please try again.');
                             }
-                        } else if (paymentIntent) {
-                            console.log('Payment confirmed successfully:', paymentIntent.status);
-                            // Payment successful - user will be redirected automatically
                         }
                     } catch (stripeError) {
                         console.log('Stripe confirmation catch error:', stripeError);

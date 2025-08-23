@@ -232,17 +232,7 @@ const ArtworkDetailPage = () => {
                         )}
                     </div>
                     
-                    {/* Engagement Section */}
-                    <div className="mt-8 p-4 bg-orange-50 rounded-lg">
-                         <h3 className="text-lg font-semibold text-gray-800">Engage & Share</h3>
-                         <div className="flex space-x-4 mt-3">
-                            <button className="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg text-sm">Attend Workshop (Zoom)</button>
-                            <button className="flex items-center space-x-2 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm">
-                                <ShareIcon className="w-4 h-4" />
-                                <span>Share</span>
-                            </button>
-                         </div>
-                    </div>
+                 
                 </div>
             </div>
         </div>

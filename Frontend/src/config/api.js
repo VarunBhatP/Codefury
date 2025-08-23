@@ -35,6 +35,12 @@ export const API_CONFIG = {
         ORDERS: {
             CREATE_PAYMENT_INTENT: '/orders/create-payment-intent',
             GET_USER_ORDERS: '/orders/user-orders',
+        },
+        
+        // Share endpoints
+        SHARE: {
+            CREATE_LINK: '/shareLink/art/:artId/share',
+            GET_SHARED: '/shareLink/share/:shareToken',
         }
     }
 };

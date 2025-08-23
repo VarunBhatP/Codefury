@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useArt } from '../context/ArtContext';
 import { useAuth } from '../context/AuthContext';
 import { HeartIcon, BookmarkIcon } from './Icons';
 import ImageWithLoader from './ImageWithLoader';
+import ShareModal from './ShareModal';
 
 const ArtCard = ({ artwork }) => {
     const { toggleLike, toggleBookmark } = useArt();
     const { user, isAuthenticated } = useAuth();
+    const [showShareModal, setShowShareModal] = useState(false);
     
     // Check if current user is the artist
     const isOwner = isAuthenticated && user && artwork.artistId === user._id;
@@ -85,7 +87,23 @@ const ArtCard = ({ artwork }) => {
                 <button onClick={() => toggleBookmark(artwork.id)} className={`p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white`}>
                     <BookmarkIcon isFilled={artwork.isBookmarked} className={`w-5 h-5 ${artwork.isBookmarked ? 'text-orange-500' : 'text-gray-600'}`} />
                 </button>
+                <button 
+                    onClick={() => setShowShareModal(true)} 
+                    className="p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-md hover:bg-white"
+                    title="Share Artwork"
+                >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                    </svg>
+                </button>
             </div>
+            
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                artId={artwork.id}
+                artTitle={artwork.title}
+            />
         </div>
     );
 };
