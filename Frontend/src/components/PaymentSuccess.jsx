@@ -7,6 +7,7 @@ const PaymentSuccess = () => {
     const navigate = useNavigate();
     const { clearCart } = useArt();
     const [countdown, setCountdown] = useState(5);
+    const [transactionId] = useState(`DEMO-${Date.now()}`);
 
     useEffect(() => {
         // Clear the cart on successful payment
@@ -28,11 +29,14 @@ const PaymentSuccess = () => {
 
     const paymentIntentId = searchParams.get('payment_intent');
     const paymentStatus = searchParams.get('redirect_status');
+    const isDummyPayment = searchParams.get('dummy');
+    const amount = searchParams.get('amount');
+    const itemCount = searchParams.get('items');
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-                {paymentStatus === 'succeeded' ? (
+                {paymentStatus === 'succeeded' || isDummyPayment ? (
                     <>
                         <div className="mb-6">
                             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -40,15 +44,49 @@ const PaymentSuccess = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-                            <p className="text-gray-600">Thank you for your purchase. Your order has been confirmed.</p>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                {isDummyPayment ? 'Demo Payment Successful!' : 'Payment Successful!'}
+                            </h1>
+                            <p className="text-gray-600">
+                                {isDummyPayment 
+                                    ? 'Demo purchase completed successfully. This was a test transaction.' 
+                                    : 'Thank you for your purchase. Your order has been confirmed.'
+                                }
+                            </p>
                         </div>
 
-                        {paymentIntentId && (
-                            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                                <p className="text-sm text-gray-500">Payment ID: {paymentIntentId}</p>
-                            </div>
-                        )}
+                        {/* Payment Details */}
+                        <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
+                            {isDummyPayment && (
+                                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+                                    Demo Mode
+                                </div>
+                            )}
+                            {amount && (
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Amount:</span>
+                                    <span className="font-semibold">₹{amount}</span>
+                                </div>
+                            )}
+                            {itemCount && (
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Items:</span>
+                                    <span className="font-semibold">{itemCount} artwork(s)</span>
+                                </div>
+                            )}
+                            {paymentIntentId && (
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Payment ID:</span>
+                                    <span className="text-xs text-gray-500">{paymentIntentId}</span>
+                                </div>
+                            )}
+                            {isDummyPayment && (
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Transaction ID:</span>
+                                    <span className="text-xs text-gray-500">{transactionId}</span>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="space-y-4">
                             <button

@@ -23,6 +23,7 @@ import PaymentSuccess from './components/PaymentSuccess';
 import PaymentFailure from './components/PaymentFailure';
 import LeaderboardTest from './components/LeaderboardTest';
 import SharedArtworkPage from './pages/SharedArtworkPage';
+// import EditArtworkPage from './pages/EditArtworkPage';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
                 <Route path="/payment-failure" element={<PaymentFailure />} />
                 <Route path="/leaderboard-test" element={<LeaderboardTest />} />
                 <Route path="/shared/:shareToken" element={<SharedArtworkPage />} />
+                {/* <Route path="/edit-artwork/:id" element={<EditArtworkPage />} /> */}
               </Routes>
             </main>
             <Footer />
