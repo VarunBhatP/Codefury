@@ -78,102 +78,36 @@ const ShoppingCart = ({ isOpen, onClose }) => {
                         console.log('Payment amount:', data.data.totalAmount);
                         console.log('Item count:', data.data.itemCount);
                         
-                        // First, check the payment intent status
-                        const { error: retrieveError, paymentIntent: existingIntent } = await stripe.retrievePaymentIntent(data.data.clientSecret);
-                        
-                        if (retrieveError) {
-                            console.log('Error retrieving payment intent:', retrieveError);
-                            setError('Payment intent error. Please try again.');
-                            return;
-                        }
-                        
-                        console.log('Payment intent status:', existingIntent.status);
-                        
-                        // Only confirm if the payment intent is in the correct state
-                        if (existingIntent.status === 'requires_payment_method') {
-                            const { error, paymentIntent } = await stripe.confirmPayment({
-                                clientSecret: data.data.clientSecret,
-                                confirmParams: {
-                                    return_url: `${window.location.origin}/payment-success`,
-                                    payment_method_data: {
-                                        billing_details: {
-                                            name: 'Test Customer', // You can get this from user profile
-                                        },
-                                    },
-                                },
-                                redirect: 'if_required',
-                            });
-
-                            console.log('Stripe confirmation result:', { error, paymentIntent });
-
-                            if (error) {
-                                console.log('Stripe confirmation error:', error);
-                                
-                                // Handle specific Stripe errors
-                                if (error.type === 'card_error') {
-                                    setError(`Card error: ${error.message}`);
-                                } else if (error.type === 'validation_error') {
-                                    setError(`Validation error: ${error.message}`);
-                                } else if (error.type === 'invalid_request_error') {
-                                    if (error.code === 'payment_intent_unexpected_state') {
-                                        if (retryCount < 2) {
-                                            console.log(`Retrying payment confirmation (attempt ${retryCount + 1})`);
-                                            setLoading(false);
-                                            setTimeout(() => handleCheckout(retryCount + 1), 1000);
-                                            return;
-                                        } else {
-                                            setError('Payment session expired. Please try again.');
-                                        }
-                                    } else {
-                                        setError('Invalid payment request. Please try again.');
-                                    }
-                                } else {
-                                    setError(error.message || 'Payment confirmation failed');
-                                }
-                                
-                                // For critical errors, redirect to failure page
-                                if (error.type === 'invalid_request_error' || error.type === 'api_error') {
-                                    const errorMessage = encodeURIComponent(error.message || 'Payment failed');
-                                    navigate(`/payment-failure?error_message=${errorMessage}`);
-                                }
-                            } else if (paymentIntent) {
-                                console.log('Payment confirmed successfully:', paymentIntent.status);
-                                // Payment was successful, user will be redirected
-                            }
-                        } else if (existingIntent.status === 'succeeded') {
-                            console.log('Payment already succeeded');
-                            // Payment was already successful, redirect to success page
-                            window.location.href = '/payment-success';
-                        } else if (existingIntent.status === 'canceled') {
-                            console.log('Payment was canceled');
-                            setError('Payment was canceled. Please try again.');
-                        } else {
-                            console.log('Unexpected payment intent status:', existingIntent.status);
-                            setError('Payment session error. Please try again.');
-                        }
+                        // Direct payment confirmation with automatic payment methods
+                        const { error, paymentIntent } = await stripe.confirmPayment({
+                            clientSecret: data.data.clientSecret,
+                            confirmParams: {
+                                return_url: `${window.location.origin}/payment-success`,
+                            },
+                            redirect: 'always',
+                        });
 
                         if (error) {
                             console.log('Stripe confirmation error:', error);
                             
-                            // Handle specific Stripe errors
                             if (error.type === 'card_error') {
                                 setError(`Card error: ${error.message}`);
                             } else if (error.type === 'validation_error') {
                                 setError(`Validation error: ${error.message}`);
-                            } else if (error.type === 'invalid_request_error') {
-                                setError('Invalid payment request. Please try again.');
+                            } else if (error.code === 'payment_intent_unexpected_state') {
+                                setError('Payment session expired. Creating a new payment session...');
+                                // Create a new payment intent by retrying
+                                if (retryCount < 2) {
+                                    setLoading(false);
+                                    setTimeout(() => handleCheckout(retryCount + 1), 1000);
+                                    return;
+                                }
                             } else {
-                                setError(error.message || 'Payment confirmation failed');
-                            }
-                            
-                            // For critical errors, redirect to failure page
-                            if (error.type === 'invalid_request_error' || error.type === 'api_error') {
-                                const errorMessage = encodeURIComponent(error.message || 'Payment failed');
-                                navigate(`/payment-failure?error_message=${errorMessage}`);
+                                setError(error.message || 'Payment failed. Please try again.');
                             }
                         } else if (paymentIntent) {
                             console.log('Payment confirmed successfully:', paymentIntent.status);
-                            // Payment was successful, user will be redirected
+                            // Payment successful - user will be redirected automatically
                         }
                     } catch (stripeError) {
                         console.log('Stripe confirmation catch error:', stripeError);
